@@ -1,11 +1,8 @@
 import gurobipy as gp
 import numpy as np
 import matplotlib.pyplot as plt
-import numpy as np
-import matplotlib.pyplot as plt
 import random
 from random import randint
-
 from numba import jit, njit
 
 def load_points(file):
@@ -13,6 +10,7 @@ def load_points(file):
     points = []
 
     for i,line in enumerate(f.readlines()):
+        #ritorna il count nella prima variabile e il value nella seconda
         nums = line.split(" ")
         coords = []
         for num in nums:
@@ -26,7 +24,7 @@ def load_points(file):
     f.close()
     return points
 
-@jit(nopython=True)
+@jit(nopython=True)#modalità di compilazione ad alte performance
 def calc_centroids(sol, points, K):
     dim = np.shape(points)[1]
     centroids = np.zeros((K,dim))
