@@ -16,10 +16,11 @@ def load_points(file):
         nums = line.split(" ")
         coords = []
         for num in nums:
-            if num != "":
+            if num != '' and num != '\n':
                 coords.append(float(num))
-        coords = np.array(coords)
-        points.append(coords)
+        if len(coords)!=0:
+            coords = np.array(coords)
+            points.append(coords)
 
     points = np.array(points)
     f.close()
@@ -111,3 +112,4 @@ def printR2sol(points, sol, K):
     for i in range(K):
         to_draw = clusters[i]
         plt.scatter(to_draw[:,0], to_draw[:,1], color = colors[i])
+    plt.show()
