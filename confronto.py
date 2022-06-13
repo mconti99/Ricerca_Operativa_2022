@@ -70,11 +70,9 @@ def simulated_annealing(base_sol, points, K, iters, alpha, Ti = 10, Tf = 10**-8,
     return best_sol
 
 @njit
-def neighbors_clustering(sol, points, K, q):
+def neighbors_clustering(sol, points, K):
     neighbors = []
-
     q = int(len(points)/50)
-
     choices = np.arange(len(sol))
     orig_val = squared_inner_distance(sol, points, K)
     centroids = calc_centroids(sol, points, K)
@@ -86,9 +84,8 @@ def neighbors_clustering(sol, points, K, q):
             new_sol = sol.copy()
             if(k != new_sol[choice]):
                 new_sol[choice] = k
-                new_val = orig_val - np.linalg.norm(points[choice]-centroids[sol[choice]]) + np.linalg.norm(points[choice]-centroids[k])
+                new_val = orig_val - np.linalg.norm(points[choice]-centroids[sol[choice]])**2 + np.linalg.norm(points[choice]-centroids[k])**2
                 neighbors.append((new_sol,new_val))
-
 
     choices1 = np.arange(len(sol))
     choices2 = np.arange(len(sol))
@@ -101,24 +98,24 @@ def neighbors_clustering(sol, points, K, q):
         new_sol = sol.copy()
         new_sol[choice1], new_sol[choice2] = new_sol[choice2], new_sol[choice1]
 
-        new_val = orig_val - np.linalg.norm(points[choice1]-centroids[sol[choice1]]) - np.linalg.norm(points[choice2]-centroids[sol[choice2]]) + np.linalg.norm(points[choice1]-centroids[sol[choice2]]) + np.linalg.norm(points[choice2]-centroids[sol[choice1]])
+        new_val = orig_val - np.linalg.norm(points[choice1]-centroids[sol[choice1]])**2 - np.linalg.norm(points[choice2]-centroids[sol[choice2]])**2 + np.linalg.norm(points[choice1]-centroids[sol[choice2]])**2 + np.linalg.norm(points[choice2]-centroids[sol[choice1]])**2
         neighbors.append((new_sol,new_val))
         
     return neighbors
 
 @njit
-def local_search(base_sol, points, K, q = 100, verbose = True):
+def local_search(base_sol, points, K, verbose = True):
     old_sol = base_sol
     base_val = squared_inner_distance(old_sol, points, K)
     iter = 1
     same_sol = 0
 
     while True:
-        neighbourhood = neighbors_clustering(old_sol, points, K, q)
+        neighbourhood = neighbors_clustering(old_sol, points, K)
         best_val = squared_inner_distance(old_sol, points , K)
         best_sol = old_sol
 
-        if verbose:
+        if verbose and iter%50 == 0:
             print("Iteration number:", iter, "Valore percentuale:", best_val/base_val*100, "%")
 
         for sol,val in neighbourhood:
@@ -222,7 +219,7 @@ for i in tqdm(range(1,50)):
             sol = k_means(points,K)
         if(j == 2):
             sol = np.random.randint(K, size = N)
-            sol = local_search(sol, points, K, q = 300,verbose = False)
+            sol = local_search(sol, points, K, verbose = False)
         val = squared_inner_distance(sol, points, K)
         sheet1.write(i, j+4, val)
     wb.save('res_auto.xls')
