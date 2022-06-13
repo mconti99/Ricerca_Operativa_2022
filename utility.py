@@ -63,38 +63,11 @@ def squared_inner_distance(sol, points, K):
 
     return tot_distance
 
-def create_initial_sol(points, K):
-    N = points.shape[0]
-    dimension = points.shape[1]
-    centroids = np.zeros((K,dimension))
-    clusters = np.zeros(N)
-    choices = np.arange(N)
-
-    for i in range(K):
-        choice = np.random.randint(len(choices))
-        centroids[i] = points[choice].copy()#centroids_list[i]
-        choices = np.delete(choices, choice)
-            
-   
-        for i in range(N):
-            dist = -1
-            centroid = -1
-            for c in range(K):
-                dist_c = np.linalg.norm(centroids[c]-points[i])
-                if(dist_c < dist or dist == -1):
-                    centroid = c
-                    dist = dist_c
-            clusters[i] = int(centroid)
-
-    return clusters
-
-
 def printR2sol(points, sol, K):
     N = len(sol)
     colors = []
     for i in range(K):
         colors.append('#%06X' % randint(0, 0xFFFFFF))
-
 
     clusters = []
 
@@ -111,3 +84,28 @@ def printR2sol(points, sol, K):
         to_draw = clusters[i]
         plt.scatter(to_draw[:,0], to_draw[:,1], color = colors[i])
     plt.show()
+
+def create_initial_sol(points, K):
+    N = points.shape[0]
+    dimension = points.shape[1]
+    centroids = np.zeros((K,dimension))
+    clusters = np.zeros(N)
+    choices = np.arange(N)
+
+    for i in range(K):
+        choice = np.random.randint(len(choices))
+        centroids[i] = points[choice].copy() #centroids_list[i]
+        choices = np.delete(choices, choice)
+   
+        for i in range(N):
+            dist = -1
+            centroid = -1
+            for c in range(K):
+                dist_c = np.linalg.norm(centroids[c]-points[i])
+                if(dist_c < dist or dist == -1):
+                    centroid = c
+                    dist = dist_c
+            clusters[i] = int(centroid)
+
+    return clusters
+
