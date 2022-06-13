@@ -6,6 +6,9 @@ from numba import njit
 from sklearn.datasets import make_blobs
 from utility import *
 from tqdm import tqdm
+import xlwt
+from xlwt import Workbook
+from time import time
 
 @njit
 def change_sol(sol, K):
@@ -183,43 +186,84 @@ def k_means(points, K, iters = 10):
     return best_sol
 
 
-from confronto import *
-import xlwt
-from xlwt import Workbook
+def confronta_dataset():
+    wb = Workbook()
+    sheet1 = wb.add_sheet('Sheet 1')
+
+    sheet1.write(0, 1, f"N Punti")
+    sheet1.write(0, 2, "stdev")
+    sheet1.write(0, 3, "ncluster")
+    sheet1.write(0, 4, "s.a.")
+    sheet1.write(0, 5, "k-means")
+    sheet1.write(0, 6, "local search")
 
 
 
-wb = Workbook()
-sheet1 = wb.add_sheet('Sheet 1')
+    n_points = [100,200,500,500,1000,1000,1500,2000,3000,5000,10000,20000,30000,40000,50000,100,200,500,1000,1500,10000,2000,3000,5000,1000,1000,1000,1000,1000,2000,2000,2000,2000,2000,3000,3000,3000,3000,3000,4000,4000,4000,4000,4000,5000,5000,5000,5000,5000]
+    n_clusters = [5,10,5,10,5,10,5,5,5,5,4,5,10,5,5,5,5,5,10,5,5,20,30,50,10,10,10,10,10,15,15,15,15,15,20,20,20,20,20,5,5,5,5,5,10,10,10,10,10]
 
-sheet1.write(0, 1, f"N Punti")
-sheet1.write(0, 2, "stdev")
-sheet1.write(0, 3, "ncluster")
-sheet1.write(0, 4, "s.a.")
-sheet1.write(0, 5, "k-means")
-sheet1.write(0, 6, "local search")
+    for i in tqdm(range(1,50)):
+        sheet1.write(i, 0, f"Test {i}")
+        N = n_points[i-1]
+        K = n_clusters[i-1]
+        sheet1.write(i, 1, N)
+        sheet1.write(i, 3, K)
+        points = load_points(f'benchmark/benchmark{i}.txt')
+        for j in range(3):
+            if(j == 0):
+                sol = create_initial_sol(points,K)
+                sol = simulated_annealing(sol, points, K, 100, 0.99, 100, 0.001, verbose = False)
+            if(j == 1):
+                sol = k_means(points,K)
+            if(j == 2):
+                sol = np.random.randint(K, size = N)
+                sol = local_search(sol, points, K, verbose = False)
+            val = squared_inner_distance(sol, points, K)
+            sheet1.write(i, j+4, val)
+        wb.save('res_auto.xls')
 
 
+def confronta_tempo():
+    n_points = [100,200,500,500,1000,1000,1500,2000,3000,5000]
+    n_clusters = [5,10,5,10,5,10,5,5,5,5]
 
-n_points = [100,200,500,500,1000,1000,1500,2000,3000,5000,10000,20000,30000,40000,50000,100,200,500,1000,1500,10000,2000,3000,5000,1000,1000,1000,1000,1000,2000,2000,2000,2000,2000,3000,3000,3000,3000,3000,4000,4000,4000,4000,4000,5000,5000,5000,5000,5000]
-n_clusters = [5,10,5,10,5,10,5,5,5,5,4,5,10,5,5,5,5,5,10,5,5,20,30,50,10,10,10,10,10,15,15,15,15,15,20,20,20,20,20,5,5,5,5,5,10,10,10,10,10]
+    wb = Workbook()
+    sheet1 = wb.add_sheet('Sheet 2')
 
-for i in tqdm(range(1,50)):
-    sheet1.write(i, 0, f"Test {i}")
-    N = n_points[i-1]
-    K = n_clusters[i-1]
-    sheet1.write(i, 1, N)
-    sheet1.write(i, 3, K)
-    points = load_points(f'benchmark{i}.txt')
-    for j in range(3):
-        if(j == 0):
-            sol = create_initial_sol(points,K)
-            sol = simulated_annealing(sol, points, K, 100, 0.99, 100, 0.001, verbose = False)
-        if(j == 1):
-            sol = k_means(points,K)
-        if(j == 2):
-            sol = np.random.randint(K, size = N)
-            sol = local_search(sol, points, K, verbose = False)
-        val = squared_inner_distance(sol, points, K)
-        sheet1.write(i, j+4, val)
-    wb.save('res_auto.xls')
+    sheet1.write(0, 1, f"N Punti")
+    sheet1.write(0, 2, "ncluster")
+    sheet1.write(0, 4, "s.a.")
+    sheet1.write(0, 5, "k-means")
+    sheet1.write(0, 6, "local search")
+
+    points = load_points(f'benchmark{1}.txt')
+    sol = np.random.randint(10, size = 100)
+    sol = simulated_annealing(sol, points, 10, 100, 0.99, 100, 0.001, verbose = False)
+    sol = local_search(sol, points, 10, verbose = False)
+
+    for i in tqdm(range(1,11)):
+        sheet1.write(i, 0, f"Test {i}")
+        N = n_points[i-1]
+        K = n_clusters[i-1]
+        sheet1.write(i, 1, N)
+        sheet1.write(i, 3, K)
+        points = load_points(f'benchmark{i}.txt')
+        for j in range(3):
+            if(j == 0):
+                sol = create_initial_sol(points,K)
+                start = time()
+                sol = simulated_annealing(sol, points, K, 100, 0.99, 100, 0.001, verbose = False)
+            if(j == 1):
+                start = time()
+                sol = k_means(points,K)
+            if(j == 2):
+                sol = np.random.randint(K, size = N)
+                start = time()
+                sol = local_search(sol, points, K, verbose = False)
+            t_tot = time()-start
+            sheet1.write(i, j+4, t_tot)
+        wb.save('res_auto.xls')
+
+confronta_tempo()
+confronta_dataset()
+    
